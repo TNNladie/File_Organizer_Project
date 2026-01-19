@@ -1,0 +1,91 @@
+{
+    "source_directory": "{gelecek}",
+    "destination_directory": "{gelecek}",
+    "log_file": "organizer.log",
+    "log_level": "INFO",
+    "file_extensions": {
+        "Images": [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".bmp",
+            ".svg",
+            ".tiff",
+            ".ico"
+        ],
+        "Documents": [
+            ".pdf",
+            ".docx",
+            ".doc",
+            ".txt",
+            ".xlsx",
+            ".xls",
+            ".pptx",
+            ".ppt",
+            ".csv",
+            ".odt",
+            ".rtf"
+        ],
+        "Audio": [
+            ".mp3",
+            ".wav",
+            ".flac",
+            ".aac",
+            ".ogg",
+            ".wma",
+            ".m4a"
+        ],
+        "Video": [
+            ".mp4",
+            ".mkv",
+            ".avi",
+            ".mov",
+            ".wmv",
+            ".flv",
+            ".webm",
+            ".m4v"
+        ],
+        "Archives": [
+            ".zip",
+            ".rar",
+            ".7z",
+            ".tar",
+            ".gz",
+            ".bz2",
+            ".iso"
+        ],
+        "Code": [
+            ".py",
+            ".js",
+            ".html",
+            ".css",
+            ".java",
+            ".cpp",
+            ".c",
+            ".h",
+            ".json",
+            ".xml",
+            ".sql",
+            ".sh",
+            ".bat"
+        ],
+        "Executables": [
+            ".exe",
+            ".msi",
+            ".bat",
+            ".sh",
+            ".apk",
+            ".app"
+        ]
+    },
+    "monitoring": {
+        "enabled": true,
+        "interval": 1,
+        "recursive": false
+    },
+    "renaming": {
+        "enabled": false,
+        "format": "original"
+    }
+}
