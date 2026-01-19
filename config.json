@@ -1,6 +1,6 @@
 {
-    "source_directory": "{gelecek}",
-    "destination_directory": "{gelecek}",
+    "source_directory": "~/Downloads",
+    "destination_directory": "~/Desktop/Duzenli_Dosyalar",
     "log_file": "organizer.log",
     "log_level": "INFO",
     "file_extensions": {
