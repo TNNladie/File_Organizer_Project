@@ -7,7 +7,7 @@ from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-# Modül bağımlılıklarını yönet
+# Modül bağımlılıklarını yönet (Import işlemleri)
 try:
     from src.organizer import FileOrganizer
     HAS_ORGANIZER = True
@@ -21,12 +21,12 @@ except ImportError:
         HAS_ORGANIZER = False
 
 class WatcherHandler(FileSystemEventHandler):
-    """Dosya sistemi olaylarını işleyen sınıf."""
+    # Dosya sistemi olaylarını işleyen sınıf
     def __init__(self, organizer=None):
         self.organizer = organizer
 
     def on_created(self, event):
-        """Dosya veya klasör oluşturulduğunda tetiklenir."""
+        # Dosya veya klasör oluşturulduğunda tetiklenir
         path_type = "KLASÖR" if event.is_directory else "DOSYA"
         src_path_str = str(event.src_path)
         
@@ -34,7 +34,7 @@ class WatcherHandler(FileSystemEventHandler):
         print(message)
         logging.info(message)
         
-        # Dosya yazma işleminin tamamlanması için bekle
+        # Dosya yazma işleminin bitmesi için bekle
         time.sleep(1)
         
         # Dosya ise organize et
@@ -45,12 +45,12 @@ class WatcherHandler(FileSystemEventHandler):
             except Exception as e:
                 print(f"-> Düzenleme hatası: {e}")
         elif event.is_directory:
-             print(f"-> Klasör tespit edildi, işlem yapılmıyor.")
+            print(f"-> Klasör tespit edildi, işlem yapılmıyor.")
         elif not self.organizer:
             print("-> Düzenleyici aktif değil, sadece izleme yapılıyor.")
 
 class Watcher:
-    """Belirtilen dizini izleyen ve değişiklikleri yöneten ana sınıf."""
+    # İzleme ve değişiklik yönetimi ana sınıfı
     def __init__(self, directory, organizer=None):
         self.directory = str(Path(directory).resolve())
         self.organizer = organizer
@@ -58,7 +58,7 @@ class Watcher:
         self.handler = WatcherHandler(organizer)
 
     def start(self):
-        """İzleme işlemini başlatır."""
+        # İzleme işlemini başlat
         print(f"--- İzleyici Başlatıldı: {self.directory} ---")
         print("Yeni dosyalar ve klasörler bekleniyor...")
         
@@ -76,13 +76,13 @@ class Watcher:
             self.stop()
 
     def stop(self):
-        """İzleme işlemini sonlandırır."""
+        # İzlemeyi durdur
         print("İzleyici durduruluyor...")
         self.observer.stop()
         self.observer.join()
 
     def scan_existing(self):
-        """Başlangıçta mevcut dosyaları tarar ve düzenler."""
+        # Başlangıçta mevcut dosyaları tara ve düzenle
         if not os.path.exists(self.directory):
             print(f"Klasör bulunamadı: {self.directory}")
             return
@@ -97,37 +97,44 @@ class Watcher:
                 self.organizer.organize_file(full_path)
 
 if __name__ == "__main__":
-    # Konfigürasyon dosyasını yükle
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+    
+    # Kullanıcıdan izlenecek klasör yolunu al
+    print("--- Dosya İzleyici ve Düzenleyici ---")
+    
+    target_dir = None
+    while not target_dir:
+        user_input = input("Lütfen izlenecek klasör yolunu girin: ").strip()
+        user_input = user_input.strip('"').strip("'")  # Tırnakları temizle
+        
+        if os.path.exists(user_input) and os.path.isdir(user_input):
+            target_dir = user_input
+        else:
+            print("! Geçersiz klasör yolu veya klasör bulunamadı. Lütfen tekrar deneyin.")
+
+    print(f"\nSeçilen Hedef Dizin: {target_dir}")
+
+    # Yapılandırmayı yükle
     current_file_path = Path(__file__).resolve()
     base_dir = current_file_path.parent.parent
     config_path = base_dir / 'config.json'
     
-    target_dir = None
-    if config_path.exists():
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = json.load(f)
-                target_dir = config.get('source_directory')
-        except Exception as e:
-            print(f"Konfigürasyon hatası: {e}")
-
-    # Hedef dizin kontrolü ve varsayılan atama
-    if not target_dir or target_dir == "{gelecek}" or not os.path.exists(target_dir):
-        print("Hedef dizin geçersiz. Test dizini kullanılıyor.")
-        test_dir = base_dir / "test_folder"
-        test_dir.mkdir(exist_ok=True)
-        target_dir = str(test_dir)
-        print(f"İzlenen Dizin: {target_dir}")
-    
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
-
-    # Düzenleyici sınıfını başlat
     organizer = None
-    if HAS_ORGANIZER and 'config' in locals():
-         try:
-            organizer = FileOrganizer(config)
-         except Exception as e:
-             print(f"Organizer başlatılamadı: {e}")
+    if HAS_ORGANIZER:
+        if config_path.exists():
+            try:
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    organizer = FileOrganizer(config)
+                    print("-> Organizer modülü aktif.")
+            except Exception as e:
+                print(f"-> Config hatası: {e}")
+                print("-> Organizer devre dışı.")
+        else:
+            print("-> Config dosyası yok. Organizer devre dışı.")
+    else:
+        print("-> Organizer modülü yok.")
 
+    # İzleyiciyi başlat
     w = Watcher(target_dir, organizer)
     w.start()
