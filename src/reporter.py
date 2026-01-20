@@ -27,15 +27,26 @@ def generate_report():
                         category = parts[1].strip()
                         categories[category] += 1
         
-        print("=" * 40)
-        print(f" TOPLAM TAŞINAN DOSYA SAYISI: {total_moved}")
-        print("=" * 40)
-        print("KATEGORİ DAĞILIMI:")
-        print("-" * 40)
+        report_lines = []
+        report_lines.append("=" * 40)
+        report_lines.append(f" TOPLAM TAŞINAN DOSYA SAYISI: {total_moved}")
+        report_lines.append("=" * 40)
+        report_lines.append("KATEGORİ DAĞILIMI:")
+        report_lines.append("-" * 40)
         for cat, count in categories.most_common():
-            print(f" {cat:<20} : {count}")
-        print("-" * 40)
-        print("Rapor sonu.\n")
+            report_lines.append(f" {cat:<20} : {count}")
+        report_lines.append("-" * 40)
+        report_lines.append("Rapor sonu.\n")
+
+        # Hem ekrana yaz hem dosyaya kaydet
+        output_text = "\n".join(report_lines)
+        print(output_text)
+        
+        with open("report.txt", "w", encoding="utf-8") as report_file:
+            report_file.write(f"--- RAPOR --- (Kaynak: {log_path})\n")
+            report_file.write(output_text)
+        
+        print(f"\n>> Rapor dosyası oluşturuldu: {os.path.abspath('report.txt')}")
 
     except Exception as e:
         print(f"Rapor oluşturulurken hata: {e}")

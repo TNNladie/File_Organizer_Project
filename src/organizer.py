@@ -1,23 +1,27 @@
 import shutil
 import time
+import os
 from pathlib import Path
 from config_loader import load_config
 from logger import get_logger
+from reporter import generate_report
 
 class Organizer:
     def __init__(self):
+        # Config ve Logger yükle (Hata almamak için güvenli yükleme)
         self.config = load_config()
         self.logger = get_logger()
+        
         self.source_dir = Path(self.config["source_directory"])
         self.dest_dir = Path(self.config["destination_directory"])
         self.extensions_map = self.config["file_extensions"]
         
-        # Try importing cleaner, fallback if missing
+        # Cleaner kontrolü
         try:
             from cleaner import sanitize_filename
             self.sanitize_filename = sanitize_filename
         except ImportError:
-            self.sanitize_filename = lambda name: name
+            self.sanitize_filename = lambda name: name.lower().replace(" ", "_")
 
     def _get_unique_path(self, target_folder, clean_name):
         """Generates a unique path to avoid overwriting existing files."""
@@ -38,16 +42,18 @@ class Organizer:
             counter += 1
 
     def organize_file(self, file_path):
-        """Organizes a single file."""
+        """Watcher için tekil dosya organizasyonu."""
         file_path = Path(file_path)
         
-        # Basic checks
+        # Temel kontroller
         if not file_path.exists() or file_path.is_dir():
-            return
+            print(f"Atlandı (Klasör veya Yok): {file_path}")
+            return False
+            
         if file_path.suffix in ['.tmp', '.crdownload', '.part']:
-            return
+            return False
 
-        # 1. Determine Category
+        # 1. Kategori Bulma
         file_extension = file_path.suffix.lower()
         found_category = "Others"
         
@@ -56,29 +62,41 @@ class Organizer:
                 found_category = category
                 break
         
-        # 2. Prepare Target Folder
+        # 2. Hedef Klasör
         target_folder = self.dest_dir / found_category
         target_folder.mkdir(parents=True, exist_ok=True)
         
-        # 3. Sanitize Name and handle duplicates
+        # 3. İsim Temizleme
         clean_name = self.sanitize_filename(file_path.name)
         destination_path = self._get_unique_path(target_folder, clean_name)
         
-        # 4. Move File
+        # 4. Taşıma
         try:
             shutil.move(str(file_path), str(destination_path))
-            self.logger.info(f"TASINDI | {found_category} | {file_path.name} -> {destination_path.name}")
+            
+            log_msg = f"TASINDI | {found_category} | {file_path.name} -> {destination_path.name}"
+            self.logger.info(log_msg)
             print(f"✔ [OK] {found_category}: {destination_path.name}")
+            
+            # --- Raporu Güncelle (Kullanıcı İsteği) ---
+            try:
+                generate_report()
+            except Exception as e:
+                print(f"Rapor güncellenemedi: {e}")
+                
             return True
+            
         except PermissionError:
             self.logger.error(f"ERİŞİM HATASI | {file_path.name} dosyası kullanımda.")
         except Exception as e:
             self.logger.error(f"HATA | {file_path.name} taşınamadı: {e}")
+        
         return False
 
     def scan_directory(self):
-        """Scans the source directory and organizes all files."""
+        """Main.py seçeneği için toplu tarama."""
         print(f"📂 Klasör Taranıyor: {self.source_dir}")
+        print("-" * 50)
         
         if not self.source_dir.exists():
             print("HATA: Kaynak klasör bulunamadı!")
@@ -90,9 +108,10 @@ class Organizer:
                 if self.organize_file(item):
                     count += 1
                 
-        print(f"✨ Tarama Bitti. Toplam işlem gören dosya: {count}")
+        print("-" * 50)
+        print(f"✨ Tarama Bitti. Toplam işlem gören: {count}")
 
-# For backward compatibility or direct execution
+# Backward compatibility (Main.py veya Watcher.py uyumu)
 if __name__ == "__main__":
     organizer = Organizer()
     organizer.scan_directory()

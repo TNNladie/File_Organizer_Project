@@ -1,0 +1,14 @@
+--- RAPOR --- (Kaynak: C:\proje-google - Kopya\logs\organizer.log)
+========================================
+ TOPLAM TAŞINAN DOSYA SAYISI: 99
+========================================
+KATEGORİ DAĞILIMI:
+----------------------------------------
+ Documents            : 55
+ Images               : 31
+ Code                 : 6
+ Executables          : 4
+ Video                : 2
+ Archives             : 1
+----------------------------------------
+Rapor sonu.
