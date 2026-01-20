@@ -1,63 +1,74 @@
 import os
 import json
-import shutil # Dosya taşıma işlemi için gerekli
+from pathlib import Path
+import shutil
 
-# KLASÖR OLUŞTURMA FONKSİYON
-def klasor_olustur(klasor_yolu):
-    if not os.path.exists(klasor_yolu):
-        os.makedirs(klasor_yolu) #adresteki klasör oluşturur "Duzenli_Dosyalar klasörünü inşa eder.""
-        print(f"Yeni klasör oluşturuldu: {klasor_yolu}")
 
-# İSİM YAPMA FONKSİYON
-def Farkli_isim_yap(hedef_klasor, dosya_adi):
-    dosya_adi = dosya_adi.replace(" ", "_")
-    isim, uzanti = os.path.splitext(dosya_adi) 
+class Organizer:
+    def __init__(self):
+        self.BASE_DIR = Path.home()
+        self.DOWNLOADS_DIR = self.BASE_DIR / "Downloads"
 
-    sayac = 1
-    yeni_yol = os.path.join(hedef_klasor, dosya_adi)
+        # Config dosyasını yükle
+        with open("../config.json", "r", encoding="utf-8") as f:
+            self.CONFIG = json.load(f)
 
-    while os.path.exists(yeni_yol):
-        yeni_isim = f"{isim}_{sayac}{uzanti}"
-        yeni_yol = os.path.join(hedef_klasor, yeni_isim)
-        sayac = sayac + 1
-        
-    return os.path.basename(yeni_yol)
+        self.FILE_EXTENSIONS = self.CONFIG["file_extensions"]
+        self.FILES = list(self.FILE_EXTENSIONS.keys())  # Hedef klasör listesi
 
-# TAŞIMA FONKSİYONU
-def dosyayi_duzenle(dosya_yolu, ayarlar):
-    try:
-        dosya_adi = os.path.basename(dosya_yolu)
-        uzanti = os.path.splitext(dosya_adi)[1].lower()
-        gidecegi_kategori = "Diger" #eşleşme olmaz ise böyle bir klasör oluşturur ve oraya atar.
+    def create_directory(self, target_path):
+        """Hedef klasörleri oluşturur."""
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
 
-        if "file_extensions" in ayarlar:
-            for kategori, uzanti_listesi in ayarlar["file_extensions"].items():
-                if uzanti in uzanti_listesi:
-                    gidecegi_kategori = kategori
-                    break 
-        
-    
-        ana_hedef_tam = ayarlar.get("destination_directory", ayarlar.get("destination_folder"))
-        
-        if not ana_hedef_tam or ana_hedef_tam == "{gelecek}":
-            print("Hata: Hedef klasör ayarı bulunamadı (destination_directory).")
-            return
+    def get_unique_name(self, path, filename):
+        """Eğer dosya hedefte varsa sonuna _1, _2 ekleyerek benzersiz isim üretir."""
+        base, extension = os.path.splitext(filename)
+        counter = 1
+        unique_name = filename
+        while os.path.exists(os.path.join(path, unique_name)):
+            unique_name = f"{base}_{counter}{extension}"
+            counter += 1
+        return unique_name
 
-        ana_hedef= os.path.expanduser(ana_hedef_tam) #~ işaretini açar 
-        hedef_klasor = os.path.join(ana_hedef, gidecegi_kategori) #hedef klasör yolunu oluşturur
-    
-        klasor_olustur(hedef_klasor)
-        
+    def clean_filename(self, filename):
+        """Boşlukları '_' ile değiştirir ve küçük harf yapar."""
+        name, ext = os.path.splitext(filename)
+        clean_name = name.lower().replace(" ", "_")
+        return f"{clean_name}{ext.lower()}"
 
-        yeni_dosya_adi = Farkli_isim_yap(hedef_klasor, dosya_adi)
-        
-        son_hedef_yol = os.path.join(hedef_klasor, yeni_dosya_adi)
-        
-        shutil.move(dosya_yolu, son_hedef_yol)#dosyayı taşıma işlemi kütüphanesi
-        
-        print(f"Başarılı: {dosya_adi} -> {gidecegi_kategori} olarak taşındı.")
-        
-    except Exception as hata:
-        print(f"Hata oluştu: {hata}")
+    def move_file(self, source_dir):
+        # Klasördeki tüm dosyaları tara
+        for item in os.listdir(source_dir):
+            item_path = source_dir / item
 
-dosyayi_duzenle("C:\Users\tuana\Downloads",CONFIG)
+            # Klasörleri değil sadece dosyaları işle
+            if os.path.isdir(item_path):
+                continue
+
+            # 1. Dosya adını temizle (Boşluk -> Alt Tire)
+            cleaned_name = self.clean_filename(item)
+            extension = os.path.splitext(item)[1].lower()
+
+            # 2. Uzantıya göre hedef klasörü belirle
+            target_folder_name = "Others"  # Varsayılan klasör
+            for folder, exts in self.FILE_EXTENSIONS.items():
+                if extension in exts:
+                    target_folder_name = folder
+                    break
+
+            target_dir = source_dir / target_folder_name
+            self.create_directory(target_dir)
+
+            # 3. İsim çakışmasını önle (Aynı isimde dosya varsa)
+            final_name = self.get_unique_name(target_dir, cleaned_name)
+            final_path = target_dir / final_name
+
+            # 4. Taşıma işlemini gerçekleştir
+            shutil.move(item_path, final_path)
+            print(f"Taşındı: {item} -> {target_folder_name}/{final_name}")
+
+
+if __name__ == "__main__":
+    organizer = Organizer()
+    organizer.move_file(organizer.DOWNLOADS_DIR)
