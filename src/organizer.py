@@ -93,6 +93,65 @@ class Organizer:
         
         return False
 
+    def organize_folder(self, folder_path):
+        """Klasörleri organize eder."""
+        folder_path = Path(folder_path)
+        
+        # Klasör kontrolü
+        if not folder_path.exists() or not folder_path.is_dir():
+            print(f"Atlandı (Dosya veya Yok): {folder_path}")
+            return False
+        
+        # JSON'daki tanımlı kategorileri al
+        defined_categories = set(self.extensions_map.keys())
+        defined_categories.add("Others")  # Others kategorisi de dahil
+        
+        # Eğer klasör adı tanımlı kategorilerden biriyse, atla
+        if folder_path.name in defined_categories or folder_path.name == "folders":
+            print(f"Atlandı (Tanımlı Kategori): {folder_path.name}")
+            return False
+        
+        # Hedef klasör: folders
+        target_folder = self.dest_dir / "folders"
+        target_folder.mkdir(parents=True, exist_ok=True)
+        
+        # Hedef yol
+        destination_path = target_folder / folder_path.name
+        
+        # Eğer aynı isimde klasör varsa, benzersiz isim oluştur
+        if destination_path.exists():
+            counter = 1
+            while True:
+                new_name = f"{folder_path.name}_{counter}"
+                candidate_path = target_folder / new_name
+                if not candidate_path.exists():
+                    destination_path = candidate_path
+                    break
+                counter += 1
+        
+        # Taşıma
+        try:
+            shutil.move(str(folder_path), str(destination_path))
+            
+            log_msg = f"KLASÖR TASINDI | folders | {folder_path.name} -> {destination_path.name}"
+            self.logger.info(log_msg)
+            print(f"✔ [OK] Klasör: {destination_path.name}")
+            
+            # Raporu güncelle
+            try:
+                generate_report()
+            except Exception as e:
+                print(f"Rapor güncellenemedi: {e}")
+            
+            return True
+            
+        except PermissionError:
+            self.logger.error(f"ERİŞİM HATASI | {folder_path.name} klasörü kullanımda.")
+        except Exception as e:
+            self.logger.error(f"HATA | {folder_path.name} klasörü taşınamadı: {e}")
+        
+        return False
+
     def scan_directory(self):
         """Main.py seçeneği için toplu tarama."""
         print(f"📂 Klasör Taranıyor: {self.source_dir}")
@@ -102,14 +161,19 @@ class Organizer:
             print("HATA: Kaynak klasör bulunamadı!")
             return
 
-        count = 0
+        file_count = 0
+        folder_count = 0
+        
         for item in self.source_dir.iterdir():
             if item.is_file():
                 if self.organize_file(item):
-                    count += 1
+                    file_count += 1
+            elif item.is_dir():
+                if self.organize_folder(item):
+                    folder_count += 1
                 
         print("-" * 50)
-        print(f"✨ Tarama Bitti. Toplam işlem gören: {count}")
+        print(f"✨ Tarama Bitti. Dosya: {file_count}, Klasör: {folder_count}")
 
 # Backward compatibility (Main.py veya Watcher.py uyumu)
 if __name__ == "__main__":
