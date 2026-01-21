@@ -24,7 +24,7 @@ Herhangi bir yazılım bilgisi veya Python kurulumu gerektirmeden kullanmak içi
 Projeyi kaynak koddan çalıştırmak veya geliştirmek isterseniz:
 1.  **Depoyu Klonlayın:**
     ```bash
-    git clone [https://github.com/KULLANICI_ADIN/File_Organizer_Project.git](https://github.com/KULLANICI_ADIN/File_Organizer_Project.git)
+    git clone https://github.com/TNNladie/File_Organizer_Project.git
     cd File_Organizer_Project
     ```
 2.  **Bağımlılıkları Kurun:**
