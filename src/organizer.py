@@ -53,6 +53,10 @@ class Organizer:
         if file_path.suffix in ['.tmp', '.crdownload', '.part']:
             return False
 
+        # Rapor dosyalarını görmezden gel (Sonsuz döngüyü önlemek için)
+        if file_path.name == "report.txt" or (file_path.name.startswith("report_") and file_path.suffix == ".txt"):
+            return False
+
         # 1. Kategori Bulma
         file_extension = file_path.suffix.lower()
         found_category = "Others"
