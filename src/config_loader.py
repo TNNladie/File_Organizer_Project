@@ -24,10 +24,10 @@ def load_config():
             
             user_downloads = get_default_downloads_folder()
             
-            # {gelecek} yer tutucularını değiştir
-            if config.get("source_directory") == "{gelecek}":
+            # {path} yer tutucularını değiştir
+            if config.get("source_directory") == "{path}":
                 config["source_directory"] = user_downloads     
-            if config.get("destination_directory") == "{gelecek}":
+            if config.get("destination_directory") == "{path}":
                 config["destination_directory"] = user_downloads
 
             # Log klasörünü de ana dizinde (logs) oluştur

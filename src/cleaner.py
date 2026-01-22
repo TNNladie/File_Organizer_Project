@@ -21,7 +21,7 @@ def sanitize_filename(filename):
     name = unicodedata.normalize('NFKD', name).encode('ASCII', 'ignore').decode('utf-8')
     
     # 2. İstenmeyen karakterleri sil (Sadece harf, rakam, - ve _ kalsın)
-    name = re.sub(r'[^\w\s-]', '', name)
+    name = re.sub(r'[^\w\s.-]', '', name)
     
     # 3. Boşlukları _ yap
     name = re.sub(r'[-\s]+', '_', name).strip('-_')

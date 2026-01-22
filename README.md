@@ -41,7 +41,7 @@ Projeyi kaynak koddan çalıştırmak veya geliştirmek isterseniz:
 ## ⚙️ Yapılandırma (config.json)
 Program varsayılan olarak sisteminizin **İndirilenler (Downloads)** klasörünü hedef alır. Ayarları özelleştirmek için ana dizindeki `config.json` dosyasını kullanabilirsiniz:
 * `file_extensions`: Hangi uzantının hangi klasör ismine gideceğini tanımlar.
-* `source_directory`: Taranacak ana klasör yoludur (Varsayılan: `{gelecek}` sistem klasörünü temsil eder).
+* `source_directory`: Taranacak ana klasör yoludur (Varsayılan: `{path}` sistem klasörünü temsil eder).
 
 
 
